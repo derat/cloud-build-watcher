@@ -49,7 +49,7 @@ func buildEmail(cfg *config, build *cbpb.Build) ([]byte, error) {
 		fmt.Sprintf("[%s] %s %s (build %s)", build.ProjectId,
 			buildTag(build, triggerNameTag, "[unknown]"),
 			build.Status, strings.Split(build.Id, "-")[0]))
-	writeHead("Date", time.Now().Local().Format(time.RFC1123Z))
+	writeHead("Date", time.Now().In(cfg.emailTimeZone).Format(time.RFC1123Z))
 	writeHead("MIME-Version", "1.0")
 	writeHead("Content-Type", "multipart/alternative; boundary="+mw.Boundary())
 	io.WriteString(&b, "\r\n")
@@ -86,8 +86,8 @@ func buildEmail(cfg *config, build *cbpb.Build) ([]byte, error) {
 		TriggerURL:  "https://console.cloud.google.com/cloud-build/triggers/edit/" + build.BuildTriggerId,
 		Status:      build.Status.String(),
 		Commit:      buildTag(build, commitTag, ""),
-		Start:       start.Local().Format(timeFmt),
-		End:         end.Local().Format(timeFmt),
+		Start:       start.In(cfg.emailTimeZone).Format(timeFmt),
+		End:         end.In(cfg.emailTimeZone).Format(timeFmt),
 		Duration:    formatDuration(end.Sub(start)),
 	}
 

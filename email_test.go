@@ -21,6 +21,10 @@ func TestBuildEmail(t *testing.T) {
 			&mail.Address{Address: "user2@example.org"},
 		},
 	}
+	var err error
+	if cfg.emailTimeZone, err = time.LoadLocation("America/New_York"); err != nil {
+		t.Fatal("Failed loading time zone: ", err)
+	}
 
 	makeTimestamp := func(s string) *tspb.Timestamp {
 		tt, err := time.Parse(time.RFC3339, s)
@@ -52,10 +56,13 @@ func TestBuildEmail(t *testing.T) {
 		`From: "Sender Name" <sender@example\.org>\r\n`,
 		`To: user1@example\.org, user2@example\.org\r\n`,
 		`Subject: \[my-project\] my-trigger FAILURE \(build 1234\)\r\n`,
+		`Date: .+ -0500\r\n`,
 		`Build:\s+1234-5678\n`,
 		`Trigger:\s+my-trigger\n`,
 		`Status:\s+FAILURE\n`,
 		`Commit:\s+my-commit\n`,
+		`Start:\s+Sat, 11 Dec 2021 14:42:31 -0500\n`,
+		`End:\s+Sat, 11 Dec 2021 15:04:51 -0500\n`,
 		`Duration:\s+22m20s\n`,
 		`Log:\s+https://example.org/log\n`,
 		`<tr><td>Build:</td><td><a href="https://example.org/log">1234-5678</a></td></tr>\n`,
@@ -63,6 +70,8 @@ func TestBuildEmail(t *testing.T) {
 			`triggers/edit/trigger-id">my-trigger</a></td></tr>\n`,
 		`<tr><td>Status:</td><td>FAILURE</td></tr>\n`,
 		`<tr><td>Commit:</td><td>my-commit</td></tr>\n`,
+		`<tr><td>Start:</td><td>Sat, 11 Dec 2021 14:42:31 -0500</td></tr>\n`,
+		`<tr><td>End:</td><td>Sat, 11 Dec 2021 15:04:51 -0500</td></tr>\n`,
 		`<tr><td>Duration:</td><td>22m20s</td></tr>\n`,
 	} {
 		if !regexp.MustCompile(re).Match(msg) {

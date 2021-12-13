@@ -11,23 +11,22 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
 )
 
 // config contains the Cloud Function's configuration data.
 type config struct {
-	// How to send email.
-	emailHostname string // email server hostname, e.g. "smtp.sendgrid.net"
-	emailPort     int    // email server port, e.g. 587
-	emailUsername string // email server username, e.g. "apikey"
-	emailPassword string // email server password, e.g. "my-secret-api-key"
+	emailHostname string // server hostname, e.g. "smtp.sendgrid.net"
+	emailPort     int    // server port, e.g. 587
+	emailUsername string // server username, e.g. "apikey"
+	emailPassword string // server password, e.g. "my-secret-api-key"
 
-	// Where to send email.
-	emailFrom       *mail.Address   // email from address
-	emailRecipients []*mail.Address // email recipients
+	emailFrom       *mail.Address   // from address
+	emailRecipients []*mail.Address // recipients
+	emailTimeZone   *time.Location  // used for dates
 
-	// When to send email.
 	emailBuildTriggerIDs   map[string]struct{} // Cloud Build trigger IDs, empty to not check
 	emailBuildTriggerNames map[string]struct{} // Cloud Build trigger names, empty to not check
 	emailBuildStatuses     map[string]struct{} // Cloud Build statuses, e.g. "SUCCESS" or "FAILURE"
@@ -83,13 +82,18 @@ func loadConfig() (*config, error) {
 	var err error
 	if v := strVar("EMAIL_FROM", ""); v != "" {
 		if cfg.emailFrom, err = mail.ParseAddress(v); err != nil {
-			return nil, fmt.Errorf("bad EMAIL_FROM: %v", v)
+			return nil, fmt.Errorf("bad EMAIL_FROM: %v", err)
 		}
 	}
 	if v := strVar("EMAIL_RECIPIENTS", ""); v != "" {
 		if cfg.emailRecipients, err = mail.ParseAddressList(v); err != nil {
-			return nil, fmt.Errorf("bad EMAIL_RECIPIENTS: %v", v)
+			return nil, fmt.Errorf("bad EMAIL_RECIPIENTS: %v", err)
 		}
+	}
+
+	// Load and validate time zone.
+	if cfg.emailTimeZone, err = time.LoadLocation(strVar("EMAIL_TIME_ZONE", "Etc/UTC")); err != nil {
+		return nil, fmt.Errorf("bad EMAIL_TIME_ZONE: %v", err)
 	}
 
 	// Validate build statuses.

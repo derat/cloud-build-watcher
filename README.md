@@ -67,12 +67,15 @@ These variables control **how email is sent**:
 *   `EMAIL_USERNAME` - Email server username, e.g. `apikey`
 *   `EMAIL_PASSWORD` - Email server password, e.g. `my-secret-api-key`
 
-These variables control **where email is sent**:
+These variables control **where email is sent** and related details:
 
-*   `EMAIL_FROM` - Email from address, e.g. `me@example.org` or
-    `My Name <me@example.org>`
+*   `EMAIL_FROM` - Email from address, e.g. `me@example.org` or `My Name
+    <me@example.org>`
 *   `EMAIL_RECIPIENTS` - Comma-separated email recipients, e.g.
     `user1@example.org, user2@example.org`
+*   `EMAIL_TIME_ZONE` - [TZ database name] of time zone to use in email
+    messages, e.g. `America/Los_Angeles`, `America/New_York`, or `Europe/Berlin`
+    (default is `Etc/UTC`, i.e. +00:00)
 
 These variables control **which build events result in email**:
 
@@ -83,13 +86,14 @@ These variables control **which build events result in email**:
     `my-trigger, my-other-trigger` (this requires `trigger-name-` tags to be set
     on your builds as described in the "Deploying" section)
 *   `EMAIL_BUILD_STATUSES` - Whitespace- or comma-separated list of [build
-    statuses] that can produce email, defaulting to
-    `FAILURE,INTERNAL_ERROR,TIMEOUT`
+    statuses] that can produce email (default is
+    `FAILURE,INTERNAL_ERROR,TIMEOUT`)
 
 If either `EMAIL_BUILD_TRIGGER_NAMES` or `EMAIL_BUILD_TRIGGER_NAMES` is
 supplied, email is only sent for events that were the result of a trigger
 matched by either variable.
 
+[TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
 
 ## A rant
