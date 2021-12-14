@@ -46,17 +46,21 @@ tags:
   - trigger-name-$TRIGGER_NAME
 ```
 
+See [build/test.yaml](./build/test.yaml) for an example.
+
 [build trigger]: https://cloud.google.com/build/docs/triggers
 [Cloud Build configurations]: https://cloud.google.com/build/docs/build-config-file-schema
 
 ## Configuration
 
 Configuration is performed via environment variables, which can be passed via
-the command line when deploying the function (via repeated `--set-env-vars
-FOO=bar` flags or the `--env-vars-file` flag) or configured via the Google Cloud
-Console (by navigating to your project's Cloud Functions page, clicking your
+the command line when deploying the function (via the `--set-env-vars` or
+`--env-vars-file` flags) or configured via the Google Cloud Console (by
+navigating to your project's Cloud Functions page, clicking the `WatchBuilds`
 function, clicking "Edit", and expanding the "Runtime, build, connections and
-security settings" section).
+security settings" section). Note that the `--set-env-vars` flag won't work with
+values that contain commas since it interprets commas as delimiters between
+variables.
 
 See [Using Environment Variables] for more information about setting environment
 variables for Cloud Functions.
@@ -103,6 +107,17 @@ email is only sent for events originating from a trigger in either list.
 
 [TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
+
+### Seeing more information
+
+The Cloud Function logs information about what it's doing, including why it
+chooses not to send email about build messages. You can see this information via
+the Cloud Console (go to Cloud Functions, click on the `WatchBuilds` function,
+and click the "Logs" tab) or by running a command like the following:
+
+```sh
+gcloud --project=$PROJECT_ID functions logs read WatchBuilds
+```
 
 ## A rant
 

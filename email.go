@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/smtp"
 	"net/textproto"
@@ -32,6 +33,8 @@ func sendEmail(ctx context.Context, cfg *config, build *cbpb.Build) error {
 	if cfg.emailUsername != "" {
 		auth = smtp.PlainAuth("", cfg.emailUsername, cfg.emailPassword, cfg.emailHostname)
 	}
+
+	log.Printf("Sending email to %v", strings.Join(cfg.emailRecipientsAddrs(), ","))
 	return smtp.SendMail(addr, auth, cfg.emailFrom.Address, cfg.emailRecipientsAddrs(), msg)
 }
 

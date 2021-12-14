@@ -1,0 +1,9 @@
+steps:
+  - name: golang
+    entrypoint: go
+    args: ["test"]
+
+tags:
+  # Set tags to include in Pub/Sub build messages.
+  - commit-$COMMIT_SHA
+  - trigger-name-$TRIGGER_NAME

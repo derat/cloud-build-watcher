@@ -29,10 +29,12 @@ func WatchBuilds(ctx context.Context, msg *pubsub.Message) error {
 		return err
 	}
 
+	log.Printf("Got message about build %s with status %s", build.Id, build.Status)
+
 	if err := cfg.checkEmail(&build); err != nil {
-		log.Printf("Not sending email for message %v about build %v: %v", msg.ID, build.Id, err)
+		log.Print("Not sending email: ", err)
 	} else if err := sendEmail(ctx, cfg, &build); err != nil {
-		log.Printf("Failed sending email for message %v about build %v: %v", msg.ID, build.Id, err)
+		log.Print("Failed sending email: ", err)
 	}
 
 	return nil
