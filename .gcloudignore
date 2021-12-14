@@ -11,3 +11,5 @@
 .git
 .gitignore
 *.md
+test_badge
+test_email
