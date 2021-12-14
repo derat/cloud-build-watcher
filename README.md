@@ -81,7 +81,7 @@ variables for Cloud Functions.
 ### How email is sent
 
 | Name             | Description     | Example             | Default |
-| ---------------- | --------------- | ------------------- | ------- |
+| :--------------- | :-------------- | :------------------ | :------ |
 | `EMAIL_HOSTNAME` | Server hostname | `smtp.sendgrid.net` |         |
 | `EMAIL_PORT`     | Server port     | `587`               | `25`    |
 | `EMAIL_USERNAME` | Server username | `apikey`            |         |
@@ -93,7 +93,7 @@ sent.
 ### Where email is sent (and related details)
 
 | Name               | Description                            | Example                                  | Default   |
-| ------------------ | -------------------------------------- | ---------------------------------------- | --------- |
+| :----------------- | :------------------------------------- | :--------------------------------------- | :-------- |
 | `EMAIL_FROM`       | "From" address                         | `My Name <me@example.org>`               |           |
 | `EMAIL_RECIPIENTS` | List of recipients                     | `user1@example.org, user2@example.org`   |           |
 | `EMAIL_TIME_ZONE`  | time zone [TZ database name]           | `America/Los_Angeles` or `Europe/Berlin` | `Etc/UTC` |
@@ -103,7 +103,7 @@ sent.
 ### Which build events result in email
 
 | Name                        | Description                 | Example                        | Default                          |
-| --------------------------- | ----------------------------|------------------------------- | -------------------------------- |
+| :-------------------------- | :---------------------------| :----------------------------- | :------------------------------- |
 | `EMAIL_BUILD_TRIGGER_IDS`   | List of build trigger IDs   | `123-456, 789-123`             |                                  |
 | `EMAIL_BUILD_TRIGGER_NAMES` | List of build trigger names | `my-trigger, my-other-trigger` |                                  |
 | `EMAIL_BUILD_STATUSES`      | List of [build statuses]    |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
@@ -122,7 +122,7 @@ email is only sent for events originating from a trigger in either list.
 ### Badge images
 
 | Name           | Description               | Example     | Default |
-| -------------- | ------------------------- | ----------- | ------- |
+| :------------- | :------------------------ | :---------- | :------ |
 | `BADGE_BUCKET` | Cloud Storage bucket name | `my-bucket` |         |
 
 If the `BADGE_BUCKET` environment variable is set, SVG images will be written to
