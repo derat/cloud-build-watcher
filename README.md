@@ -1,8 +1,11 @@
 # cloud-build-watcher
 
+![Build Status](https://storage.googleapis.com/derat-build-badges/b0d628f0-0b7a-4446-9226-8225c610ad82.svg)
+
 This repository contains a [Cloud Function] that watches for [Cloud Build]
 messages via a [Pub/Sub] topic and takes actions in response to them. Currently,
-those actions only include sending email notifications.
+those actions include sending email notifications and writing SVG badge images
+(like the one above this paragraph) to a Cloud Storage bucket.
 
 I wrote this because I was setting up automated testing and deployment using
 Cloud Build and was dismayed by how hard it was to do seemingly-simple things
@@ -50,6 +53,14 @@ See [build/test.yaml](./build/test.yaml) for an example.
 
 [build trigger]: https://cloud.google.com/build/docs/triggers
 [Cloud Build configurations]: https://cloud.google.com/build/docs/build-config-file-schema
+
+If you want to generate badge images, you'll also need to create a
+publicly-readable Cloud Storage bucket. I recommend following the "Creating a
+bucket" and "Sharing your files" steps from the [Hosting a static website]
+document. You may need to give the Cloud Function permission to write to the
+bucket if it doesn't already have it.
+
+[Hosting a static website]: https://cloud.google.com/storage/docs/hosting-static-website
 
 ## Configuration
 
@@ -108,12 +119,35 @@ email is only sent for events originating from a trigger in either list.
 [TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
 
+### Badge images
+
+| Name           | Description               | Example     | Default |
+| ------------------------------------------ | ----------- | ------- |
+| `BADGE_BUCKET` | Cloud Storage bucket name | `my-bucket` |         |
+
+Badge images will be written to Cloud Storage for `SUCCESS`, `FAILURE`,
+`INTERNAL_ERROR`, and `TIMEOUT` build statuses if the `BADGE_BUCKET` environment
+variable is set.
+
+Badge filenames take the form `<build-trigger-id>.svg` and can be accessed via a
+URL like `https://storage.googleapis.com/<bucket>/<build-trigger-id>.svg`. To
+find a trigger's ID in the Cloud Console, go to Cloud Build, click "Triggers" in
+the sidebar, click on the trigger's name, and look for a long
+hexadecimal-and-dashes ID in the URL.
+
 ### Customizing email notifications
 
 Email notifications can be customized by modifying the `BuildEmail` function and
 `textTemplate` and `htmlTemplate` constants in [email.go](./email.go). The
 [test_email](./test_email/main.go) program can be used to send example
 notifications so you can see how they're rendered by your email client.
+
+### Customizing badge images
+
+Badge images can be customized by modifying `badgeLeft` and `badgeStatuses`
+variables and the `badgeTemplate` constant in [badge.go](./badge.go). The
+[test_badge](./test_badge/main.go) program can be to generate a badge and save
+it locally so you can see what it looks like.
 
 ### Seeing more information
 

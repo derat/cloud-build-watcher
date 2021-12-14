@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"cloud.google.com/go/pubsub"
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
@@ -37,5 +38,31 @@ func WatchBuilds(ctx context.Context, msg *pubsub.Message) error {
 		log.Print("Failed sending email: ", err)
 	}
 
+	if err := cfg.checkBadge(&build); err != nil {
+		log.Print("Not writing badge: ", err)
+	} else if err := writeBadge(ctx, cfg, &build); err != nil {
+		log.Print("Failed writing badge: ", err)
+	}
+
 	return nil
+}
+
+const (
+	triggerNameTag = "trigger-name"
+	commitTag      = "commit"
+)
+
+// buildTag tries to extract a value from b's tags.
+// Given a name "foo", it will look for a tag prefixed with "foo-" and return
+// the rest of the tag. If no matching tag is found, def is returned.
+// Tags apparently must be matched by "^[\\w][\\w.-]{0,127}$" (per the failure
+// message when you try to start a build with an invalid tag).
+func buildTag(b *cbpb.Build, name, def string) string {
+	pre := name + "-"
+	for _, tag := range b.Tags {
+		if strings.HasPrefix(tag, pre) {
+			return tag[len(pre):]
+		}
+	}
+	return def
 }

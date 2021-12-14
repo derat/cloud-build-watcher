@@ -31,6 +31,9 @@ type Config struct {
 	emailBuildTriggerIDs   map[string]struct{} // Cloud Build trigger IDs, empty to not check
 	emailBuildTriggerNames map[string]struct{} // Cloud Build trigger names, empty to not check
 	emailBuildStatuses     map[string]struct{} // Cloud Build statuses, e.g. "SUCCESS" or "FAILURE"
+
+	badgeBucket        string              // Cloud Storage bucket into which badges should be written, e.g. "my-bucket"
+	badgeBuildStatuses map[string]struct{} // Cloud Build statuses, e.g. "SUCCESS" or "FAILURE"
 }
 
 var listRegexp = regexp.MustCompile(`\s*,\s*`)
@@ -78,6 +81,7 @@ func loadConfig() (*Config, error) {
 		emailBuildTriggerIDs:   listVar("EMAIL_BUILD_TRIGGER_IDS", ""),
 		emailBuildTriggerNames: listVar("EMAIL_BUILD_TRIGGER_NAMES", ""),
 		emailBuildStatuses:     listVar("EMAIL_BUILD_STATUSES", "FAILURE,INTERNAL_ERROR,TIMEOUT"),
+		badgeBucket:            strVar("BADGE_BUCKET", ""),
 	}
 	if firstErr != nil {
 		return nil, firstErr
@@ -146,6 +150,21 @@ func (cfg *Config) checkEmail(b *cbpb.Build) error {
 	}
 	if _, ok := cfg.emailBuildStatuses[b.Status.String()]; !ok {
 		return fmt.Errorf("status %q not matched by EMAIL_BUILD_STATUSES", b.Status)
+	}
+	return nil
+}
+
+// checkBadge returns nil if a badge image should be written for b
+// per cfg and a descriptive error otherwise.
+func (cfg *Config) checkBadge(b *cbpb.Build) error {
+	if cfg.badgeBucket == "" {
+		return errors.New("BADGE_BUCKET not set")
+	}
+	if b.BuildTriggerId == "" {
+		return errors.New("build not started by a trigger")
+	}
+	if _, ok := badgeStatuses[b.Status]; !ok {
+		return fmt.Errorf("non-badge status %q", b.Status)
 	}
 	return nil
 }
