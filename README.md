@@ -208,8 +208,8 @@ when I run it.
 
 Assuming it works, you'll end up with bare-bones email notifications about
 builds. I tried to [add some more
-details](https://github.com/derat/cloud-build-notifiers/commit/1c79a506deda796d6280b0648697bd4f2b1b181b),
-but to use my code, I had to build a new Docker container in the (deprecated?)
+details](https://gist.github.com/derat/fc5b16bff50ccb1380d3a603616c432a), but to
+use my code, I had to build a new Docker container in the (deprecated?)
 [Container Registry] and hack the `setup.sh` script to use it.
 
 [Automating configuration for notifications]: https://cloud.google.com/build/docs/configuring-notifications/automate#smtp
