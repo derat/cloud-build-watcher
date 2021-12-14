@@ -122,12 +122,12 @@ email is only sent for events originating from a trigger in either list.
 ### Badge images
 
 | Name           | Description               | Example     | Default |
-| ------------------------------------------ | ----------- | ------- |
+| -------------- | ------------------------- | ----------- | ------- |
 | `BADGE_BUCKET` | Cloud Storage bucket name | `my-bucket` |         |
 
-Badge images will be written to Cloud Storage for `SUCCESS`, `FAILURE`,
-`INTERNAL_ERROR`, and `TIMEOUT` build statuses if the `BADGE_BUCKET` environment
-variable is set.
+If the `BADGE_BUCKET` environment variable is set, SVG images will be written to
+Cloud Storage for `SUCCESS`, `FAILURE`, `INTERNAL_ERROR`, and `TIMEOUT` build
+statuses.
 
 Badge filenames take the form `<build-trigger-id>.svg` and can be accessed via a
 URL like `https://storage.googleapis.com/<bucket>/<build-trigger-id>.svg`. To
