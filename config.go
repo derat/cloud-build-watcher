@@ -45,7 +45,11 @@ func loadConfig() (*config, error) {
 	}
 
 	strVar := func(n, def string) string {
-		return strings.TrimSpace(os.Getenv(n))
+		v := strings.TrimSpace(os.Getenv(n))
+		if v != "" {
+			return v
+		}
+		return def
 	}
 	intVar := func(n, def string) int {
 		v, err := strconv.Atoi(strVar(n, def))
@@ -111,6 +115,9 @@ func loadConfig() (*config, error) {
 func (cfg *config) checkEmail(b *cbpb.Build) error {
 	if cfg.emailHostname == "" {
 		return errors.New("EMAIL_HOSTNAME not set")
+	}
+	if cfg.emailPort <= 0 {
+		return errors.New("EMAIL_PORT not set")
 	}
 	if cfg.emailFrom == nil {
 		return errors.New("EMAIL_FROM not set")

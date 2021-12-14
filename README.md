@@ -26,72 +26,80 @@ gcloud --project=<project-id> pubsub topics create cloud-builds
 ```
 
 The `WatchBuilds` Cloud Function can be deployed by running a command similar to
-the following.
+the following. Deploying a Cloud Function can
+[take several minutes](https://github.com/firebase/firebase-tools/issues/536).
 
 ```sh
 gcloud --project=<project-id> functions deploy WatchBuilds \
   --runtime go116 --trigger-topic cloud-builds
 ```
 
-To see build trigger names and commit hashes, append the following to your YAML
-[Cloud Build configurations] \(assuming you don't already have a `tags` section)
-to add additional tags to your builds:
+To include [build trigger] names and commit hashes in email and be able to use
+trigger names for filtering, append the following to your YAML [Cloud Build
+configurations] \(assuming you don't already have a `tags` section) to add
+additional tags to your builds:
 
 ```yaml
 tags:
-  # Set tags to include in Pub/Sub build messages.
   - commit-$COMMIT_SHA
   - trigger-name-$TRIGGER_NAME
 ```
 
+[build trigger]: https://cloud.google.com/build/docs/triggers
 [Cloud Build configurations]: https://cloud.google.com/build/docs/build-config-file-schema
 
 ## Configuration
 
 Configuration is performed via environment variables, which can be passed via
-the command line when deploying the function (either via repeated
-`--set-env-vars FOO=bar` flags or via the `--env-vars-file` flag) or configured
-via the Google Cloud Console (by navigating to your project's Cloud Functions
-page, clicking on your function, clicking "Edit", and expanding the "Runtime,
-build, connections and security settings" section).
+the command line when deploying the function (via repeated `--set-env-vars
+FOO=bar` flags or the `--env-vars-file` flag) or configured via the Google Cloud
+Console (by navigating to your project's Cloud Functions page, clicking your
+function, clicking "Edit", and expanding the "Runtime, build, connections and
+security settings" section).
 
 See [Using Environment Variables] for more information about setting environment
 variables for Cloud Functions.
 
 [Using Environment Variables]: https://cloud.google.com/functions/docs/configuring/env-var
 
-These variables control **how email is sent**:
+### How email is sent
 
-*   `EMAIL_HOSTNAME` - Email server hostname, e.g. `smtp.sendgrid.net`
-*   `EMAIL_PORT` - Email server port, e.g. `587`
-*   `EMAIL_USERNAME` - Email server username, e.g. `apikey`
-*   `EMAIL_PASSWORD` - Email server password, e.g. `my-secret-api-key`
+| Name             | Description     | Example             | Default |
+| ---------------- | --------------- | ------------------- | ------- |
+| `EMAIL_HOSTNAME` | Server hostname | `smtp.sendgrid.net` |         |
+| `EMAIL_PORT`     | Server port     | `587`               |         |
+| `EMAIL_USERNAME` | Server username | `apikey`            |         |
+| `EMAIL_PASSWORD` | Server password | `my-secret-api-key` |         |
 
-These variables control **where email is sent** and related details:
+At least `EMAIL_HOSTNAME` and `EMAIL_PORT` must be set in order for email to be
+sent.
 
-*   `EMAIL_FROM` - Email from address, e.g. `me@example.org` or `My Name
-    <me@example.org>`
-*   `EMAIL_RECIPIENTS` - Comma-separated email recipients, e.g.
-    `user1@example.org, user2@example.org`
-*   `EMAIL_TIME_ZONE` - [TZ database name] of time zone to use in email
-    messages, e.g. `America/Los_Angeles`, `America/New_York`, or `Europe/Berlin`
-    (default is `Etc/UTC`, i.e. +00:00)
+### Where email is sent (and related details)
 
-These variables control **which build events result in email**:
+| Name               | Description                            | Example                                  | Default   |
+| ------------------ | -------------------------------------- | ---------------------------------------- | --------- |
+| `EMAIL_FROM`       | "From" address                         | `My Name <me@example.org>`               |           |
+| `EMAIL_RECIPIENTS` | List of recipients                     | `user1@example.org, user2@example.org`   |           |
+| `EMAIL_TIME_ZONE`  | [TZ database name] of time zone to use | `America/Los_Angeles` or `Europe/Berlin` | `Etc/UTC` |
 
-*   `EMAIL_BUILD_TRIGGER_IDS` - Whitespace- or comma-separated list of Build
-    trigger IDs that can produce email, e.g. `123-456, 789-123`
-*   `EMAIL_BUILD_TRIGGER_NAMES` - Whitespace- or comma-separated list of Cloud
-    Build trigger names that can produce email, e.g.
-    `my-trigger, my-other-trigger` (this requires `trigger-name-` tags to be set
-    on your builds as described in the "Deploying" section)
-*   `EMAIL_BUILD_STATUSES` - Whitespace- or comma-separated list of [build
-    statuses] that can produce email (default is
-    `FAILURE,INTERNAL_ERROR,TIMEOUT`)
+`EMAIL_FROM` and `EMAIL_RECIPIENTS` must be set in order for email to be sent.
+
+### Which build events result in email
+
+| Name                        | Description                 | Example                        | Default                          |
+| --------------------------- | ----------------------------|------------------------------- | -------------------------------- |
+| `EMAIL_BUILD_TRIGGER_IDS`   | List of build trigger IDs   | `123-456, 789-123`             |                                  |
+| `EMAIL_BUILD_TRIGGER_NAMES` | List of Build trigger names | `my-trigger, my-other-trigger` |                                  |
+| `EMAIL_BUILD_STATUSES`      | List of [build statuses]    |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
+
+Items in the three above lists are separated by commas with optional spaces.
 
 If either `EMAIL_BUILD_TRIGGER_NAMES` or `EMAIL_BUILD_TRIGGER_NAMES` is
-supplied, email is only sent for events that were the result of a trigger
-matched by either variable.
+supplied, email is only sent for events originating from a trigger in either
+list.
+
+> `EMAIL_BUILD_TRIGGER_NAMES` requires `trigger-name-` tags to be set on your
+> builds as described in the "Deploying" section.
 
 [TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
