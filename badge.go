@@ -30,7 +30,7 @@ var badgeLeft = badgeInfo{"build", "#fff", "#555", -1 /* inferred from status wi
 // badgeStatuses defines how the right side of the badge should be rendered for different
 // build statuses. Statuses not listed here do not result in badge updates.
 var badgeStatuses = map[cbpb.Build_Status]badgeInfo{
-	cbpb.Build_SUCCESS:        {"success", "#fff", "#2e7d32", 52},
+	cbpb.Build_SUCCESS:        {"success", "#fff", "#2da44e", 52},
 	cbpb.Build_FAILURE:        {"failure", "#fff", "#c62828", 52},
 	cbpb.Build_INTERNAL_ERROR: {"error", "#000", "#ffeb3b", 52},
 	cbpb.Build_TIMEOUT:        {"timeout", "#fff", "#333", 52},
