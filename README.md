@@ -108,6 +108,13 @@ email is only sent for events originating from a trigger in either list.
 [TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
 
+### Customizing email notifications
+
+Email notifications can be customized by modifying the `BuildEmail` function and
+`textTemplate` and `htmlTemplate` constants in [email.go](./email.go). The
+[test_email](./test_email/main.go) program can be used to send example
+notifications so you can see how they're rendered by your email client.
+
 ### Seeing more information
 
 The Cloud Function logs information about what it's doing, including why it

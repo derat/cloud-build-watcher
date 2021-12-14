@@ -22,8 +22,8 @@ import (
 
 // sendEmail sends an email message describing build per cfg.
 // cfg.checkEmail must be called first to check that email should actually be sent.
-func sendEmail(ctx context.Context, cfg *config, build *cbpb.Build) error {
-	msg, err := buildEmail(cfg, build)
+func sendEmail(ctx context.Context, cfg *Config, build *cbpb.Build) error {
+	msg, err := BuildEmail(cfg, build)
 	if err != nil {
 		return fmt.Errorf("building email: %v", err)
 	}
@@ -38,8 +38,9 @@ func sendEmail(ctx context.Context, cfg *config, build *cbpb.Build) error {
 	return smtp.SendMail(addr, auth, cfg.emailFrom.Address, cfg.emailRecipientsAddrs(), msg)
 }
 
-// buildEmail constructs an email message describing build per cfg.
-func buildEmail(cfg *config, build *cbpb.Build) ([]byte, error) {
+// BuildEmail constructs an email message describing build per cfg.
+// It is exported so it can be used by the test_email program.
+func BuildEmail(cfg *Config, build *cbpb.Build) ([]byte, error) {
 	var b bytes.Buffer
 	mw := multipart.NewWriter(&b)
 

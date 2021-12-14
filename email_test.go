@@ -14,7 +14,7 @@ import (
 )
 
 func TestBuildEmail(t *testing.T) {
-	cfg := &config{
+	cfg := &Config{
 		emailFrom: &mail.Address{Name: "Sender Name", Address: "sender@example.org"},
 		emailRecipients: []*mail.Address{
 			&mail.Address{Name: "Recipient 1", Address: "user1@example.org"},
@@ -48,9 +48,9 @@ func TestBuildEmail(t *testing.T) {
 		},
 	}
 
-	msg, err := buildEmail(cfg, build)
+	msg, err := BuildEmail(cfg, build)
 	if err != nil {
-		t.Fatal("buildEmail failed: ", err)
+		t.Fatal("BuildEmail failed: ", err)
 	}
 	for _, re := range []string{
 		`From: "Sender Name" <sender@example\.org>\r\n`,
@@ -75,7 +75,7 @@ func TestBuildEmail(t *testing.T) {
 		`<tr><td>Duration:</td><td>22m20s</td></tr>\n`,
 	} {
 		if !regexp.MustCompile(re).Match(msg) {
-			t.Errorf("buildEmail output not matched by %q", re)
+			t.Errorf("BuildEmail output not matched by %q", re)
 		}
 	}
 }

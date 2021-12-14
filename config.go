@@ -16,8 +16,9 @@ import (
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
 )
 
-// config contains the Cloud Function's configuration data.
-type config struct {
+// Config contains the Cloud Function's configuration data.
+// It is exported so it can be used by the test_email program.
+type Config struct {
 	emailHostname string // server hostname, e.g. "smtp.sendgrid.net"
 	emailPort     int    // server port, e.g. 587
 	emailUsername string // server username, e.g. "apikey"
@@ -34,9 +35,9 @@ type config struct {
 
 var listRegexp = regexp.MustCompile(`\s*,\s*`)
 
-// loadConfig constructs a new config object from environment variables.
+// loadConfig constructs a new Config object from environment variables.
 // An error is returned if any variables are unparseable.
-func loadConfig() (*config, error) {
+func loadConfig() (*Config, error) {
 	var firstErr error
 	saveError := func(err error) {
 		if err != nil && firstErr == nil {
@@ -69,7 +70,7 @@ func loadConfig() (*config, error) {
 	}
 
 	// Parse simple fields.
-	cfg := config{
+	cfg := Config{
 		emailHostname:          strVar("EMAIL_HOSTNAME", ""),
 		emailPort:              intVar("EMAIL_PORT", "25"),
 		emailUsername:          strVar("EMAIL_USERNAME", ""),
@@ -110,9 +111,18 @@ func loadConfig() (*config, error) {
 	return &cfg, nil
 }
 
+// FakeConfig returns a minimal Config for use by the test_email program.
+func FakeConfig(from, to *mail.Address) *Config {
+	return &Config{
+		emailFrom:       from,
+		emailRecipients: []*mail.Address{to},
+		emailTimeZone:   time.Local,
+	}
+}
+
 // checkEmail returns nil if an email notification should be sent for b
 // per cfg and a descriptive error otherwise.
-func (cfg *config) checkEmail(b *cbpb.Build) error {
+func (cfg *Config) checkEmail(b *cbpb.Build) error {
 	if cfg.emailHostname == "" {
 		return errors.New("EMAIL_HOSTNAME not set")
 	}
@@ -141,7 +151,7 @@ func (cfg *config) checkEmail(b *cbpb.Build) error {
 }
 
 // emailRecipientsAddrs returns a slice of bare addresses from cfg.emailRecipients.
-func (cfg *config) emailRecipientsAddrs() []string {
+func (cfg *Config) emailRecipientsAddrs() []string {
 	addrs := make([]string, len(cfg.emailRecipients))
 	for i, a := range cfg.emailRecipients {
 		addrs[i] = a.Address
