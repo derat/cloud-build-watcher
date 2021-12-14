@@ -15,14 +15,15 @@ badges.
 
 ## Deploying
 
-> Replace `<project-id>` in the following commands with the Google Cloud Project
-> ID of the project in which the builds will be performed.
+> Replace `$PROJECT_ID` in the following commands with the Google Cloud Project
+> ID of the project in which the builds will be performed, or omit the
+> `--project` flag if you only have a single project.
 
 You may need to create a `cloud-builds` Pub/Sub topic first. Cloud Build will
 allegedly send messages to it automatically.
 
 ```sh
-gcloud --project=<project-id> pubsub topics create cloud-builds
+gcloud --project=$PROJECT_ID pubsub topics create cloud-builds
 ```
 
 The `WatchBuilds` Cloud Function can be deployed by running a command similar to
@@ -30,7 +31,7 @@ the following. Deploying a Cloud Function can
 [take several minutes](https://github.com/firebase/firebase-tools/issues/536).
 
 ```sh
-gcloud --project=<project-id> functions deploy WatchBuilds \
+gcloud --project=$PROJECT_ID functions deploy WatchBuilds \
   --runtime go116 --trigger-topic cloud-builds
 ```
 
@@ -67,7 +68,7 @@ variables for Cloud Functions.
 | Name             | Description     | Example             | Default |
 | ---------------- | --------------- | ------------------- | ------- |
 | `EMAIL_HOSTNAME` | Server hostname | `smtp.sendgrid.net` |         |
-| `EMAIL_PORT`     | Server port     | `587`               |         |
+| `EMAIL_PORT`     | Server port     | `587`               | `25`    |
 | `EMAIL_USERNAME` | Server username | `apikey`            |         |
 | `EMAIL_PASSWORD` | Server password | `my-secret-api-key` |         |
 
@@ -80,7 +81,7 @@ sent.
 | ------------------ | -------------------------------------- | ---------------------------------------- | --------- |
 | `EMAIL_FROM`       | "From" address                         | `My Name <me@example.org>`               |           |
 | `EMAIL_RECIPIENTS` | List of recipients                     | `user1@example.org, user2@example.org`   |           |
-| `EMAIL_TIME_ZONE`  | [TZ database name] of time zone to use | `America/Los_Angeles` or `Europe/Berlin` | `Etc/UTC` |
+| `EMAIL_TIME_ZONE`  | time zone [TZ database name]           | `America/Los_Angeles` or `Europe/Berlin` | `Etc/UTC` |
 
 `EMAIL_FROM` and `EMAIL_RECIPIENTS` must be set in order for email to be sent.
 
@@ -89,14 +90,13 @@ sent.
 | Name                        | Description                 | Example                        | Default                          |
 | --------------------------- | ----------------------------|------------------------------- | -------------------------------- |
 | `EMAIL_BUILD_TRIGGER_IDS`   | List of build trigger IDs   | `123-456, 789-123`             |                                  |
-| `EMAIL_BUILD_TRIGGER_NAMES` | List of Build trigger names | `my-trigger, my-other-trigger` |                                  |
+| `EMAIL_BUILD_TRIGGER_NAMES` | List of build trigger names | `my-trigger, my-other-trigger` |                                  |
 | `EMAIL_BUILD_STATUSES`      | List of [build statuses]    |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
 
 Items in the three above lists are separated by commas with optional spaces.
 
-If either `EMAIL_BUILD_TRIGGER_NAMES` or `EMAIL_BUILD_TRIGGER_NAMES` is
-supplied, email is only sent for events originating from a trigger in either
-list.
+If either `EMAIL_BUILD_TRIGGER_IDS` or `EMAIL_BUILD_TRIGGER_NAMES` is supplied,
+email is only sent for events originating from a trigger in either list.
 
 > `EMAIL_BUILD_TRIGGER_NAMES` requires `trigger-name-` tags to be set on your
 > builds as described in the "Deploying" section.
