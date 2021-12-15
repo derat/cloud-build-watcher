@@ -17,6 +17,8 @@ import (
 
 // badgeTimeLayout is the layout for the build start time displayed when hovering over a badge.
 // See the time.Layout documentation at https://pkg.go.dev/time#pkg-constants.
+// TODO: This seems to not actually work except when viewing the image directly.
+// It seems like <img> elements may not receive pointer events.
 const badgeTimeLayout = "2 Jan 15:04"
 
 // badgeInfo contains information about how a portion of a badge should be rendered.

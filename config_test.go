@@ -112,8 +112,14 @@ func TestConfig_checkEmail(t *testing.T) {
 	fail := &cbpb.Build{Status: cbpb.Build_FAILURE}
 	failID := &cbpb.Build{Status: cbpb.Build_FAILURE, BuildTriggerId: "123"}
 	failBadID := &cbpb.Build{Status: cbpb.Build_FAILURE, BuildTriggerId: "000"}
-	failName := &cbpb.Build{Status: cbpb.Build_FAILURE, Tags: []string{triggerNameTag + "-trigger-1"}}
-	failBadName := &cbpb.Build{Status: cbpb.Build_FAILURE, Tags: []string{triggerNameTag + "-bad-trigger"}}
+	failName := &cbpb.Build{
+		Status:        cbpb.Build_FAILURE,
+		Substitutions: map[string]string{triggerNameSub: "trigger-1"},
+	}
+	failBadName := &cbpb.Build{
+		Status:        cbpb.Build_FAILURE,
+		Substitutions: map[string]string{triggerNameSub: "bad-trigger"},
+	}
 
 	for _, tc := range []struct {
 		env   []string

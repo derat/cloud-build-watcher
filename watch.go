@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"cloud.google.com/go/pubsub"
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
@@ -48,21 +47,19 @@ func WatchBuilds(ctx context.Context, msg *pubsub.Message) error {
 }
 
 const (
-	triggerNameTag = "trigger-name"
-	commitTag      = "commit"
+	// Substitution names to pass to buildSub:
+	// https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values
+	branchSub      = "BRANCH_NAME"
+	commitSub      = "COMMIT_SHA"
+	repoSub        = "REPO_NAME"
+	triggerNameSub = "TRIGGER_NAME"
 )
 
-// buildTag tries to extract a value from b's tags.
-// Given a name "foo", it will look for a tag prefixed with "foo-" and return
-// the rest of the tag. If no matching tag is found, def is returned.
-// Tags apparently must be matched by "^[\\w][\\w.-]{0,127}$" (per the failure
-// message when you try to start a build with an invalid tag).
-func buildTag(b *cbpb.Build, name, def string) string {
-	pre := name + "-"
-	for _, tag := range b.Tags {
-		if strings.HasPrefix(tag, pre) {
-			return tag[len(pre):]
-		}
+// buildSub returns the named value from b's Substitutions map.
+// If the named substitution does not exist, def is returned instead.
+func buildSub(b *cbpb.Build, name, def string) string {
+	if v, ok := b.Substitutions[name]; ok {
+		return v
 	}
 	return def
 }

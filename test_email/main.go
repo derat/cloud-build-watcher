@@ -55,9 +55,11 @@ func main() {
 		Status:         cbpb.Build_FAILURE,
 		StartTime:      tspb.New(now.Add(-3*time.Minute - 41*time.Second)),
 		FinishTime:     tspb.New(now),
-		Tags: []string{
-			"commit-commit-hash",
-			"trigger-name-trigger-name",
+		Substitutions: map[string]string{
+			"BRANCH_NAME":  "branch-name",
+			"COMMIT_SHA":   "commit-sha",
+			"REPO_NAME":    "repo-name",
+			"TRIGGER_NAME": "trigger-name",
 		},
 	})
 	if err != nil {

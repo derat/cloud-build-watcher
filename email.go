@@ -51,7 +51,7 @@ func BuildEmail(cfg *Config, build *cbpb.Build) ([]byte, error) {
 	writeHead("To", strings.Join(cfg.emailRecipientsAddrs(), ", "))
 	writeHead("Subject",
 		fmt.Sprintf("[%s] %s %s (build %s)", build.ProjectId,
-			buildTag(build, triggerNameTag, "[unknown]"),
+			buildSub(build, triggerNameSub, "[unknown]"),
 			build.Status, strings.Split(build.Id, "-")[0]))
 	writeHead("Date", time.Now().In(cfg.emailTimeZone).Format(time.RFC1123Z))
 	writeHead("MIME-Version", "1.0")
@@ -78,7 +78,9 @@ func BuildEmail(cfg *Config, build *cbpb.Build) ([]byte, error) {
 		TriggerName string
 		TriggerURL  string
 		Status      string
+		Repo        string
 		Commit      string
+		Branch      string
 		Start       string
 		End         string
 		Duration    string
@@ -86,10 +88,12 @@ func BuildEmail(cfg *Config, build *cbpb.Build) ([]byte, error) {
 		BuildID:     build.Id,
 		LogURL:      build.LogUrl,
 		TriggerID:   build.BuildTriggerId,
-		TriggerName: buildTag(build, triggerNameTag, ""),
+		TriggerName: buildSub(build, triggerNameSub, ""),
 		TriggerURL:  "https://console.cloud.google.com/cloud-build/triggers/edit/" + build.BuildTriggerId,
 		Status:      build.Status.String(),
-		Commit:      buildTag(build, commitTag, ""),
+		Repo:        buildSub(build, repoSub, ""),
+		Commit:      buildSub(build, commitSub, ""),
+		Branch:      buildSub(build, branchSub, ""),
 		Start:       start.In(cfg.emailTimeZone).Format(timeFmt),
 		End:         end.In(cfg.emailTimeZone).Format(timeFmt),
 		Duration:    formatDuration(end.Sub(start)),
@@ -130,27 +134,56 @@ Build:     {{.BuildID}}
 Trigger:   {{or .TriggerName .TriggerID}}
 {{end -}}
 Status:    {{.Status}}
+{{if .Repo -}}
+Repo:      {{.Repo}}
+{{end -}}
+{{if .Commit -}}
 Commit:    {{.Commit}}
+{{end -}}
+{{if .Branch -}}
+Branch:    {{.Branch}}
+{{end -}}
 Start:     {{.Start}}
 End:       {{.End}}
 Duration:  {{.Duration}}
 Log:       {{.LogURL}}
 `
 
+// https://developers.google.com/gmail/design/css
+// https://templates.mailchimp.com/resources/email-client-css-support/
 const htmlTemplate = `
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+table {
+  border-spacing: 0;
+}
+td.left {
+  font-weight: bold;
+  padding-right: 1em;
+}
+</style>
+</head>
 <body>
 <table>
-  <tr><td>Build:</td><td><a href="{{.LogURL}}">{{.BuildID}}</a></td></tr>
+  <tr><td class="left">Build</td><td><a href="{{.LogURL}}">{{.BuildID}}</a></td></tr>
   {{if .TriggerID -}}
-  <tr><td>Trigger:</td><td><a href="{{.TriggerURL}}">{{or .TriggerName .TriggerID}}</a></td></tr>
+  <tr><td class="left">Trigger</td><td><a href="{{.TriggerURL}}">{{or .TriggerName .TriggerID}}</a></td></tr>
   {{end -}}
-  <tr><td>Status:</td><td>{{.Status}}</td></tr>
-  <tr><td>Commit:</td><td>{{.Commit}}</td></tr>
-  <tr><td>Start:</td><td>{{.Start}}</td></tr>
-  <tr><td>End:</td><td>{{.End}}</td></tr>
-  <tr><td>Duration:</td><td>{{.Duration}}</td></tr>
+  <tr><td class="left">Status</td><td>{{.Status}}</td></tr>
+  {{if .Repo -}}
+  <tr><td class="left">Repo</td><td>{{.Repo}}</td></tr>
+  {{end -}}
+  {{if .Commit -}}
+  <tr><td class="left">Commit</td><td>{{.Commit}}</td></tr>
+  {{end -}}
+  {{if .Branch -}}
+  <tr><td class="left">Branch</td><td>{{.Branch}}</td></tr>
+  {{end -}}
+  <tr><td class="left">Start</td><td>{{.Start}}</td></tr>
+  <tr><td class="left">End</td><td>{{.End}}</td></tr>
+  <tr><td class="left">Duration</td><td>{{.Duration}}</td></tr>
 </table>
 </body>
 </html>

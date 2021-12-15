@@ -141,7 +141,7 @@ func (cfg *Config) checkEmail(b *cbpb.Build) error {
 		return errors.New("EMAIL_RECIPIENTS not set")
 	}
 	if len(cfg.emailBuildTriggerIDs) > 0 || len(cfg.emailBuildTriggerNames) > 0 {
-		name := buildTag(b, triggerNameTag, "")
+		name := buildSub(b, triggerNameSub, "")
 		_, idOk := cfg.emailBuildTriggerIDs[b.BuildTriggerId]
 		_, nameOk := cfg.emailBuildTriggerNames[name]
 

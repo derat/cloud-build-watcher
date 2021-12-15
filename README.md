@@ -38,20 +38,6 @@ gcloud --project=$PROJECT_ID functions deploy WatchBuilds \
   --runtime go116 --trigger-topic cloud-builds
 ```
 
-To include [build trigger] names and commit hashes in email and be able to use
-trigger names for filtering, append the following to your YAML [Cloud Build
-configurations] \(assuming you don't already have a `tags` section) to add
-additional tags to your builds:
-
-```yaml
-tags:
-  - commit-$COMMIT_SHA
-  - trigger-name-$TRIGGER_NAME
-```
-
-See [build/test.yaml](./build/test.yaml) for an example.
-
-[build trigger]: https://cloud.google.com/build/docs/triggers
 [Cloud Build configurations]: https://cloud.google.com/build/docs/build-config-file-schema
 
 If you want to generate badge images, you'll also need to create a
@@ -100,11 +86,13 @@ sent.
 
 `EMAIL_FROM` and `EMAIL_RECIPIENTS` must be set in order for email to be sent.
 
+[TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
 ### Which build events result in email
 
 | Name                        | Description                    | Example                        | Default                          |
 | :-------------------------- | :----------------------------- | :----------------------------- | :------------------------------- |
-| `EMAIL_BUILD_TRIGGER_IDS`   | List of trigger IDs            | `123-456, 789-123`             |                                  |
+| `EMAIL_BUILD_TRIGGER_IDS`   | List of [build trigger] IDs    | `123-456, 789-123`             |                                  |
 | `EMAIL_BUILD_TRIGGER_NAMES` | List of trigger names or globs | `my-trigger, main-*`           |                                  |
 | `EMAIL_BUILD_STATUSES`      | List of [build statuses]       |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
 
@@ -114,10 +102,7 @@ If either `EMAIL_BUILD_TRIGGER_IDS` or `EMAIL_BUILD_TRIGGER_NAMES` is supplied,
 email is only sent for events originating from a trigger in either list. Globs
 in `EMAIL_BUILD_TRIGGER_NAMES` are evaluated using [filepath.Match].
 
-> `EMAIL_BUILD_TRIGGER_NAMES` requires `trigger-name-` tags to be set on your
-> builds as described in the "Deploying" section.
-
-[TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+[build trigger]: https://cloud.google.com/build/docs/triggers
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
 [filepath.Match]: https://pkg.go.dev/path/filepath#Match
 
