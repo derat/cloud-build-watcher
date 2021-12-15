@@ -90,11 +90,11 @@ sent.
 
 ### Which build events result in email
 
-| Name                        | Description                    | Example                        | Default                          |
-| :-------------------------- | :----------------------------- | :----------------------------- | :------------------------------- |
-| `EMAIL_BUILD_TRIGGER_IDS`   | List of [build trigger] IDs    | `123-456, 789-123`             |                                  |
-| `EMAIL_BUILD_TRIGGER_NAMES` | List of trigger names or globs | `my-trigger, main-*`           |                                  |
-| `EMAIL_BUILD_STATUSES`      | List of [build statuses]       |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
+| Name                        | Description            | Example              | Default                            |
+| :-------------------------- | :--------------------- | :------------------- | :--------------------------------- |
+| `EMAIL_BUILD_TRIGGER_IDS`   | [Build trigger] IDs    | `123-456, 789-123`   |                                    |
+| `EMAIL_BUILD_TRIGGER_NAMES` | Trigger names or globs | `my-trigger, main-*` |                                    |
+| `EMAIL_BUILD_STATUSES`      | [Build statuses]       |                      | `FAILURE, INTERNAL_ERROR, TIMEOUT` |
 
 Items in the three above lists are separated by commas with optional spaces.
 
@@ -102,8 +102,8 @@ If either `EMAIL_BUILD_TRIGGER_IDS` or `EMAIL_BUILD_TRIGGER_NAMES` is supplied,
 email is only sent for events originating from a trigger in either list. Globs
 in `EMAIL_BUILD_TRIGGER_NAMES` are evaluated using [filepath.Match].
 
-[build trigger]: https://cloud.google.com/build/docs/triggers
-[build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
+[Build trigger]: https://cloud.google.com/build/docs/triggers
+[Build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
 [filepath.Match]: https://pkg.go.dev/path/filepath#Match
 
 ### Badge images
@@ -133,8 +133,8 @@ notifications so you can see how they're rendered by your email client.
 
 Badge images can be customized by modifying `badgeLeft` and `badgeStatuses`
 variables and the `badgeTemplate` constant in [badge.go](./badge.go). The
-[test_badge](./test_badge/main.go) program can be to generate a badge and save
-it locally so you can see what it looks like.
+[test_badge](./test_badge/main.go) program can be used to generate badges and
+save them locally so you can see what they look like.
 
 ### Seeing more information
 
