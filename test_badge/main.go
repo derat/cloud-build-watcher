@@ -8,10 +8,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	watch "github.com/derat/cloud-build-watcher"
 
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
+	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func main() {
@@ -32,12 +34,17 @@ func main() {
 		os.Exit(2)
 	}
 
+	build := &cbpb.Build{
+		Status:    cbpb.Build_Status(st),
+		StartTime: tspb.New(time.Now()),
+	}
+
 	f, err := os.OpenFile(flag.Arg(0), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed opening output file:", err)
 		os.Exit(1)
 	}
-	if err := watch.CreateBadge(f, &cbpb.Build{Status: cbpb.Build_Status(st)}); err != nil {
+	if err := watch.CreateBadge(f, build); err != nil {
 		fmt.Fprintln(os.Stderr, "Failed writing badge:", err)
 		os.Exit(1)
 	}

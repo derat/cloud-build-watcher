@@ -15,6 +15,10 @@ import (
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
 )
 
+// badgeTimeLayout is the layout for the build start time displayed when hovering over a badge.
+// See the time.Layout documentation at https://pkg.go.dev/time#pkg-constants.
+const badgeTimeLayout = "2 Jan 15:04"
+
 // badgeInfo contains information about how a portion of a badge should be rendered.
 type badgeInfo struct {
 	Text   string // text to render
@@ -73,7 +77,14 @@ func CreateBadge(w io.Writer, build *cbpb.Build) error {
 	if err != nil {
 		return err
 	}
-	return tmpl.Execute(w, struct{ Left, Right badgeInfo }{Left: left, Right: right})
+	return tmpl.Execute(w, struct {
+		Left, Right badgeInfo
+		Date        string
+	}{
+		Left:  left,
+		Right: right,
+		Date:  build.StartTime.AsTime().UTC().Format(badgeTimeLayout),
+	})
 }
 
 const badgeTemplate = `<svg xmlns="http://www.w3.org/2000/svg" width="90" height="20">
@@ -85,5 +96,12 @@ const badgeTemplate = `<svg xmlns="http://www.w3.org/2000/svg" width="90" height
       <path d="M0 0h4v20h-4z" fill="{{.Right.BG}}" />
       <text x="{{.Right.Center}}" y="14" fill="{{.Right.FG}}">{{.Right.Text}}</text>
     </g>
+    <rect width="90" height="20" rx="3" fill="#555" opacity="0">
+      <set attributeName="opacity" to="1" begin="over.mouseover" end="over.mouseout" />
+    </rect>
+    <text x="45" y="14" fill="#fff" opacity="0">{{.Date}}
+      <set attributeName="opacity" to="1" begin="over.mouseover" end="over.mouseout" />
+    </text>
+    <rect id="over" width="90" height="20" opacity="0" />
   </g>
 </svg>`
