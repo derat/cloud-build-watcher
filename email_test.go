@@ -5,6 +5,7 @@ package watch
 
 import (
 	"fmt"
+	"log"
 	"net/mail"
 	"regexp"
 	"testing"
@@ -13,6 +14,14 @@ import (
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func makeTimestamp(s string) *tspb.Timestamp {
+	tt, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		log.Panicf("Failed parsing %q: %v", s, err)
+	}
+	return tspb.New(tt)
+}
 
 func TestBuildEmail(t *testing.T) {
 	cfg := &Config{
@@ -27,13 +36,6 @@ func TestBuildEmail(t *testing.T) {
 		t.Fatal("Failed loading time zone: ", err)
 	}
 
-	makeTimestamp := func(s string) *tspb.Timestamp {
-		tt, err := time.Parse(time.RFC3339, s)
-		if err != nil {
-			t.Fatalf("Failed parsing %q: %v", s, err)
-		}
-		return tspb.New(tt)
-	}
 	build := &cbpb.Build{
 		Id:             "1234-5678",
 		ProjectId:      "my-project",
@@ -66,9 +68,8 @@ func TestBuildEmail(t *testing.T) {
 		`Commit:\s+my-commit\n`,
 		`Branch:\s+my-branch\n`,
 		`Start:\s+Sat, 11 Dec 2021 14:42:31 -0500\n`,
-		`End:\s+Sat, 11 Dec 2021 15:04:51 -0500\n`,
-		`Duration:\s+22m20s\n`,
-		`Log:\s+https://example.org/log\n`,
+		`End:\s+Sat, 11 Dec 2021 15:04:51 -0500 \(22m20s\)\n`,
+		`Log:\s+https://example.org/log\r\n`,
 		`<tr><td[^>]*>Build</td><td><a href="https://example.org/log">1234-5678</a></td></tr>\n`,
 		`<tr><td[^>]*>Trigger</td><td><a href="https://console.cloud.google.com/cloud-build/` +
 			`triggers/edit/trigger-id">my-trigger</a></td></tr>\n`,
@@ -77,8 +78,7 @@ func TestBuildEmail(t *testing.T) {
 		`<tr><td[^>]*>Commit</td><td>my-commit</td></tr>\n`,
 		`<tr><td[^>]*>Branch</td><td>my-branch</td></tr>\n`,
 		`<tr><td[^>]*>Start</td><td>Sat, 11 Dec 2021 14:42:31 -0500</td></tr>\n`,
-		`<tr><td[^>]*>End</td><td>Sat, 11 Dec 2021 15:04:51 -0500</td></tr>\n`,
-		`<tr><td[^>]*>Duration</td><td>22m20s</td></tr>\n`,
+		`<tr><td[^>]*>End</td><td>Sat, 11 Dec 2021 15:04:51 -0500 \(22m20s\)</td></tr>\n`,
 	} {
 		if !regexp.MustCompile(re).Match(msg) {
 			t.Errorf("BuildEmail output not matched by %q", re)

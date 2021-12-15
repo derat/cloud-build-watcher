@@ -7,9 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	htemplate "html/template"
 	"io"
 	"log"
-	"text/template"
+	"strings"
+	ttemplate "text/template"
+	"time"
 
 	"cloud.google.com/go/storage"
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
@@ -62,8 +65,22 @@ func writeBadge(ctx context.Context, cfg *Config, build *cbpb.Build) error {
 	w.CacheControl = "no-cache"
 	if err := CreateBadge(w, build); err != nil {
 		return err
+	} else if err := w.Close(); err != nil {
+		return err
 	}
-	return w.Close()
+
+	if cfg.badgeReports {
+		rname := build.BuildTriggerId + ".html"
+		w := client.Bucket(cfg.badgeBucket).Object(rname).NewWriter(ctx)
+		w.ContentType = "text/html; charset=UTF-8"
+		w.CacheControl = "no-cache"
+		if err := CreateReport(w, build); err != nil {
+			return err
+		} else if err := w.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // CreateBadge creates an SVG badge image for build and writes it to w.
@@ -75,7 +92,7 @@ func CreateBadge(w io.Writer, build *cbpb.Build) error {
 	left := badgeLeft
 	left.Width = 90 /* from badgeTemplate */ - right.Width
 
-	tmpl, err := template.New("").Parse(badgeTemplate)
+	tmpl, err := ttemplate.New("").Parse(strings.TrimSpace(badgeTemplate))
 	if err != nil {
 		return err
 	}
@@ -89,7 +106,8 @@ func CreateBadge(w io.Writer, build *cbpb.Build) error {
 	})
 }
 
-const badgeTemplate = `<svg xmlns="http://www.w3.org/2000/svg" width="90" height="20">
+const badgeTemplate = `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="20">
   <g font-family="DejaVu Sans,Verdana,Geneva,sans-serif" text-anchor="middle" font-size="10">
     <rect width="90" height="20" rx="3" fill="{{.Left.BG}}" />
     <text x="{{.Left.Center}}" y="14" fill="{{.Left.FG}}">{{.Left.Text}}</text>
@@ -106,4 +124,59 @@ const badgeTemplate = `<svg xmlns="http://www.w3.org/2000/svg" width="90" height
     </text>
     <rect id="over" width="90" height="20" opacity="0" />
   </g>
-</svg>`
+</svg>
+`
+
+// CreateReport writes an HTML document with build's status and timing information to w.
+func CreateReport(w io.Writer, build *cbpb.Build) error {
+	tmpl, err := htemplate.New("").Parse(strings.TrimSpace(reportTemplate))
+	if err != nil {
+		return err
+	}
+
+	const timeFmt = time.RFC1123Z // "Mon, 02 Jan 2006 15:04:05 -0700"
+	start := build.StartTime.AsTime()
+	end := build.FinishTime.AsTime()
+	tdata := struct {
+		Status   string
+		Start    string
+		End      string
+		Duration string
+	}{
+		Status:   build.Status.String(),
+		Start:    start.UTC().Format(timeFmt),
+		End:      end.UTC().Format(timeFmt),
+		Duration: formatDuration(end.Sub(start)),
+	}
+	return tmpl.Execute(w, tdata)
+}
+
+// This is essentially a subset of email.go's htmlTemplate with potentially-sensitive fields removed.
+const reportTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Build report</title>
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+table {
+  border-spacing: 0;
+}
+td.left {
+  font-weight: bold;
+  padding-right: 1em;
+}
+</style>
+</head>
+<body>
+<table>
+  <tr><td class="left">Status</td><td>{{.Status}}</td></tr>
+  <tr><td class="left">Start</td><td>{{.Start}}</td></tr>
+  <tr><td class="left">End</td><td>{{.End}} ({{.Duration}})</td></tr>
+</table>
+</body>
+</html>
+`

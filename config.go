@@ -33,8 +33,8 @@ type Config struct {
 	emailBuildTriggerNames map[string]struct{} // Cloud Build trigger names, empty to not check
 	emailBuildStatuses     map[string]struct{} // Cloud Build statuses, e.g. "SUCCESS" or "FAILURE"
 
-	badgeBucket        string              // Cloud Storage bucket into which badges should be written, e.g. "my-bucket"
-	badgeBuildStatuses map[string]struct{} // Cloud Build statuses, e.g. "SUCCESS" or "FAILURE"
+	badgeBucket  string // Cloud Storage bucket into which badges should be written, e.g. "my-bucket"
+	badgeReports bool   // write brief HTML reports alongside badges
 }
 
 var listRegexp = regexp.MustCompile(`\s*,\s*`)
@@ -61,6 +61,21 @@ func loadConfig() (*Config, error) {
 		saveError(err)
 		return v
 	}
+	boolVar := func(n, def string) bool {
+		v := strVar(n, def)
+		if v == "" {
+			v = def
+		}
+		switch v {
+		case "1", "true":
+			return true
+		case "0", "false":
+			return false
+		default:
+			saveError(fmt.Errorf("bad bool %q", v))
+			return false
+		}
+	}
 	listVar := func(n, def string) map[string]struct{} {
 		ev := strVar(n, def)
 		if len(ev) == 0 {
@@ -83,6 +98,7 @@ func loadConfig() (*Config, error) {
 		emailBuildTriggerNames: listVar("EMAIL_BUILD_TRIGGER_NAMES", ""),
 		emailBuildStatuses:     listVar("EMAIL_BUILD_STATUSES", "FAILURE,INTERNAL_ERROR,TIMEOUT"),
 		badgeBucket:            strVar("BADGE_BUCKET", ""),
+		badgeReports:           boolVar("BADGE_REPORTS", "false"),
 	}
 	if firstErr != nil {
 		return nil, firstErr
@@ -111,6 +127,10 @@ func loadConfig() (*Config, error) {
 		if _, ok := cbpb.Build_Status_value[s]; !ok {
 			return nil, fmt.Errorf("bad status %q in EMAIL_BUILD_STATUSES", s)
 		}
+	}
+
+	if cfg.badgeReports && cfg.badgeBucket == "" {
+		return nil, errors.New("BADGE_REPORTS requires BADGE_BUCKET")
 	}
 
 	return &cfg, nil

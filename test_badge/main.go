@@ -7,7 +7,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	watch "github.com/derat/cloud-build-watcher"
@@ -22,6 +24,7 @@ func main() {
 			"Writes an SVG badge image to the supplied path.\n", os.Args[0])
 		flag.PrintDefaults()
 	}
+	report := flag.Bool("report", false, "Write report file with .html extension alongside image")
 	status := flag.String("status", "SUCCESS", "Build status (SUCCESS, FAILURE, INTERNAL_ERROR, or TIMEOUT)")
 	flag.Parse()
 	if len(flag.Args()) != 1 {
@@ -34,22 +37,46 @@ func main() {
 		os.Exit(2)
 	}
 
+	now := time.Now()
 	build := &cbpb.Build{
-		Status:    cbpb.Build_Status(st),
-		StartTime: tspb.New(time.Now()),
+		Status:     cbpb.Build_Status(st),
+		StartTime:  tspb.New(now.Add(-3*time.Minute - 41*time.Second)),
+		FinishTime: tspb.New(now),
 	}
 
-	f, err := os.OpenFile(flag.Arg(0), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed opening output file:", err)
-		os.Exit(1)
-	}
-	if err := watch.CreateBadge(f, build); err != nil {
+	if err := writeFile(flag.Arg(0), func(w io.Writer) error {
+		return watch.CreateBadge(w, build)
+	}); err != nil {
 		fmt.Fprintln(os.Stderr, "Failed writing badge:", err)
 		os.Exit(1)
 	}
-	if err := f.Close(); err != nil {
-		fmt.Fprintln(os.Stderr, "Failed closing output file:", err)
-		os.Exit(1)
+
+	if *report {
+		// Replace the image path's extension (if any) with .html.
+		p := flag.Arg(0)
+		if ext := filepath.Ext(p); ext != "" {
+			p = p[:len(p)-len(ext)]
+		}
+		p += ".html"
+
+		if err := writeFile(p, func(w io.Writer) error {
+			return watch.CreateReport(w, build)
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, "Failed writing report:", err)
+			os.Exit(1)
+		}
 	}
+}
+
+// writeFile creates a file at p and passes it to fn.
+func writeFile(p string, fn func(w io.Writer) error) error {
+	f, err := os.OpenFile(p, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	if err := fn(f); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }

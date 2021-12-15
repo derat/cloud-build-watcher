@@ -101,7 +101,7 @@ func BuildEmail(cfg *Config, build *cbpb.Build) ([]byte, error) {
 
 	// Add plain text part.
 	if err := writeBody("text/plain; charset=UTF-8", func(w io.Writer) error {
-		tmpl, err := ttemplate.New("").Parse(textTemplate)
+		tmpl, err := ttemplate.New("").Parse(strings.TrimSpace(textTemplate))
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func BuildEmail(cfg *Config, build *cbpb.Build) ([]byte, error) {
 
 	// Add HTML part.
 	if err := writeBody("text/html; charset=UTF-8", func(w io.Writer) error {
-		tmpl, err := htemplate.New("").Parse(htmlTemplate)
+		tmpl, err := htemplate.New("").Parse(strings.TrimSpace(htmlTemplate))
 		if err != nil {
 			return err
 		}
@@ -144,8 +144,7 @@ Commit:    {{.Commit}}
 Branch:    {{.Branch}}
 {{end -}}
 Start:     {{.Start}}
-End:       {{.End}}
-Duration:  {{.Duration}}
+End:       {{.End}} ({{.Duration}})
 Log:       {{.LogURL}}
 `
 
@@ -155,7 +154,11 @@ const htmlTemplate = `
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
 table {
   border-spacing: 0;
 }
@@ -182,8 +185,7 @@ td.left {
   <tr><td class="left">Branch</td><td>{{.Branch}}</td></tr>
   {{end -}}
   <tr><td class="left">Start</td><td>{{.Start}}</td></tr>
-  <tr><td class="left">End</td><td>{{.End}}</td></tr>
-  <tr><td class="left">Duration</td><td>{{.Duration}}</td></tr>
+  <tr><td class="left">End</td><td>{{.End}} ({{.Duration}})</td></tr>
 </table>
 </body>
 </html>

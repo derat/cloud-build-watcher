@@ -1,11 +1,12 @@
 # cloud-build-watcher
 
-![Build Status](https://storage.googleapis.com/derat-build-badges/b0d628f0-0b7a-4446-9226-8225c610ad82.svg)
+[![Build Status](https://storage.googleapis.com/derat-build-badges/b0d628f0-0b7a-4446-9226-8225c610ad82.svg)](https://storage.googleapis.com/derat-build-badges/b0d628f0-0b7a-4446-9226-8225c610ad82.html)
 
 This repository contains a [Cloud Function] that watches for [Cloud Build]
 messages via a [Pub/Sub] topic and takes actions in response to them. Currently,
 those actions include sending email notifications and writing SVG badge images
-(like the one above this paragraph) to a Cloud Storage bucket.
+(like the one above this paragraph) and brief HTML reports to a Cloud Storage
+bucket.
 
 I wrote this because I was setting up automated testing and deployment using
 Cloud Build and was dismayed by how hard it was to do seemingly-simple things
@@ -106,21 +107,37 @@ in `EMAIL_BUILD_TRIGGER_NAMES` are evaluated using [filepath.Match].
 [Build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
 [filepath.Match]: https://pkg.go.dev/path/filepath#Match
 
-### Badge images
+### Badge images and reports
 
-| Name           | Description               | Example     | Default |
-| :------------- | :------------------------ | :---------- | :------ |
-| `BADGE_BUCKET` | Cloud Storage bucket name | `my-bucket` |         |
+| Name            | Description                         | Example       | Default |
+| :-------------- | :---------------------------------- | :------------ | :------ |
+| `BADGE_BUCKET`  | Cloud Storage bucket name           | `my-bucket`   |         |
+| `BADGE_REPORTS` | Write HTML reports alongside badges | `1` or `true` | `0`     |
 
 If the `BADGE_BUCKET` environment variable is set, SVG images will be written to
 Cloud Storage for `SUCCESS`, `FAILURE`, `INTERNAL_ERROR`, and `TIMEOUT` build
 statuses.
 
-Badge filenames take the form `<build-trigger-id>.svg` and can be accessed via a
-URL like `https://storage.googleapis.com/<bucket>/<build-trigger-id>.svg`. To
-find a trigger's ID in the Cloud Console, go to Cloud Build, click "Triggers" in
-the sidebar, click on the trigger's name, and look for a long
-hexadecimal-and-dashes ID in the URL.
+Badge filenames take the form `<trigger-id>.svg` and can be accessed via a URL
+like `https://storage.googleapis.com/<bucket>/<trigger-id>.svg`. To find a
+trigger's ID in the Cloud Console, go to Cloud Build, click "Triggers" in the
+sidebar, click on the trigger's name, and look for a long hexadecimal-and-dashes
+ID in the URL.
+
+If the `BADGE_REPORTS` variable is set to `1` or `true`, brief HTML build
+reports will be written to `BADGE_BUCKET` alongside badge images as
+`<trigger-id>.html`. These reports intentionally contain minimal information
+about builds (to avoid leaking internal details): just status, start time, end
+time, and duration.
+
+[Markdown] similar to the following can be used to display a badge image that
+links to the corresponding build report:
+
+```md
+[![Build Status](https://storage.googleapis.com/<bucket>/<trigger-id>.svg)](https://storage.googleapis.com/<bucket>/<trigger-id>.html)
+```
+
+[Markdown]: https://www.markdownguide.org/
 
 ### Customizing email notifications
 
