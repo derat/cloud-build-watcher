@@ -104,6 +104,7 @@ func TestConfig_checkEmail(t *testing.T) {
 		rcpt  = "EMAIL_RECIPIENTS=recip@example.org"
 		ids   = "EMAIL_BUILD_TRIGGER_IDS=123,456"
 		names = "EMAIL_BUILD_TRIGGER_NAMES=trigger-1,trigger-2"
+		glob  = "EMAIL_BUILD_TRIGGER_NAMES=*1"
 	)
 
 	success := &cbpb.Build{Status: cbpb.Build_SUCCESS}
@@ -137,6 +138,8 @@ func TestConfig_checkEmail(t *testing.T) {
 		{[]string{host, port, from, rcpt, names}, failName, true, "trigger name matched"},
 		{[]string{host, port, from, rcpt, ids, names}, failName, true, "trigger name matched, no ID"},
 		{[]string{host, port, from, rcpt, ids, names}, failID, true, "trigger ID matched, no name"},
+		{[]string{host, port, from, rcpt, glob}, failName, true, "trigger name matched by glob"},
+		{[]string{host, port, from, rcpt, glob}, failBadName, false, "trigger name not matched by glob"},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			defer setEnv(tc.env)()

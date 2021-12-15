@@ -102,22 +102,24 @@ sent.
 
 ### Which build events result in email
 
-| Name                        | Description                 | Example                        | Default                          |
-| :-------------------------- | :---------------------------| :----------------------------- | :------------------------------- |
-| `EMAIL_BUILD_TRIGGER_IDS`   | List of build trigger IDs   | `123-456, 789-123`             |                                  |
-| `EMAIL_BUILD_TRIGGER_NAMES` | List of build trigger names | `my-trigger, my-other-trigger` |                                  |
-| `EMAIL_BUILD_STATUSES`      | List of [build statuses]    |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
+| Name                        | Description                    | Example                        | Default                          |
+| :-------------------------- | :----------------------------- | :----------------------------- | :------------------------------- |
+| `EMAIL_BUILD_TRIGGER_IDS`   | List of trigger IDs            | `123-456, 789-123`             |                                  |
+| `EMAIL_BUILD_TRIGGER_NAMES` | List of trigger names or globs | `my-trigger, main-*`           |                                  |
+| `EMAIL_BUILD_STATUSES`      | List of [build statuses]       |                                | `FAILURE,INTERNAL_ERROR,TIMEOUT` |
 
 Items in the three above lists are separated by commas with optional spaces.
 
 If either `EMAIL_BUILD_TRIGGER_IDS` or `EMAIL_BUILD_TRIGGER_NAMES` is supplied,
-email is only sent for events originating from a trigger in either list.
+email is only sent for events originating from a trigger in either list. Globs
+in `EMAIL_BUILD_TRIGGER_NAMES` are evaluated using [filepath.Match].
 
 > `EMAIL_BUILD_TRIGGER_NAMES` requires `trigger-name-` tags to be set on your
 > builds as described in the "Deploying" section.
 
 [TZ database name]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [build statuses]: https://pkg.go.dev/google.golang.org/genproto/googleapis/devtools/cloudbuild/v1#Build_Status
+[filepath.Match]: https://pkg.go.dev/path/filepath#Match
 
 ### Badge images
 

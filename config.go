@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/mail"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -143,7 +144,17 @@ func (cfg *Config) checkEmail(b *cbpb.Build) error {
 		name := buildTag(b, triggerNameTag, "")
 		_, idOk := cfg.emailBuildTriggerIDs[b.BuildTriggerId]
 		_, nameOk := cfg.emailBuildTriggerNames[name]
-		if !idOk && !nameOk {
+
+		checkGlobs := func() bool {
+			for p := range cfg.emailBuildTriggerNames {
+				if m, err := filepath.Match(p, name); err == nil && m {
+					return true
+				}
+			}
+			return false
+		}
+
+		if !idOk && !nameOk && !checkGlobs() {
 			return fmt.Errorf("trigger %v (%q) not matched by EMAIL_BUILD_TRIGGER_IDS or "+
 				"EMAIL_BUILD_TRIGGER_NAMES", b.BuildTriggerId, name)
 		}
