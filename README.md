@@ -5,7 +5,7 @@
 This repository contains a [Cloud Function] that watches for [Cloud Build]
 messages via a [Pub/Sub] topic and takes actions in response to them. Currently,
 those actions include sending email notifications and writing SVG badge images
-(like the one above this paragraph) and brief HTML reports to a Cloud Storage
+(like the one above this paragraph) and brief HTML reports to a [Cloud Storage]
 bucket.
 
 I wrote this because I was setting up automated testing and deployment using
@@ -16,6 +16,7 @@ badges.
 [Cloud Function]: https://cloud.google.com/functions
 [Cloud Build]: https://cloud.google.com/build
 [Pub/Sub]: https://cloud.google.com/pubsub
+[Cloud Storage]: https://cloud.google.com/storage
 
 ## Deploying
 
@@ -83,7 +84,7 @@ sent.
 | :----------------- | :------------------------------------- | :--------------------------------------- | :-------- |
 | `EMAIL_FROM`       | "From" address                         | `My Name <me@example.org>`               |           |
 | `EMAIL_RECIPIENTS` | List of recipients                     | `user1@example.org, user2@example.org`   |           |
-| `EMAIL_TIME_ZONE`  | time zone [TZ database name]           | `America/Los_Angeles` or `Europe/Berlin` | `Etc/UTC` |
+| `EMAIL_TIME_ZONE`  | Time zone [TZ database name]           | `America/Los_Angeles` or `Europe/Berlin` | `Etc/UTC` |
 
 `EMAIL_FROM` and `EMAIL_RECIPIENTS` must be set in order for email to be sent.
 
@@ -91,11 +92,11 @@ sent.
 
 ### Which build events result in email
 
-| Name                        | Description            | Example              | Default                            |
-| :-------------------------- | :--------------------- | :------------------- | :--------------------------------- |
-| `EMAIL_BUILD_TRIGGER_IDS`   | [Build trigger] IDs    | `123-456, 789-123`   |                                    |
-| `EMAIL_BUILD_TRIGGER_NAMES` | Trigger names or globs | `my-trigger, main-*` |                                    |
-| `EMAIL_BUILD_STATUSES`      | [Build statuses]       |                      | `FAILURE, INTERNAL_ERROR, TIMEOUT` |
+| Name                        | Description                  | Example              | Default                            |
+| :-------------------------- | :--------------------------- | :------------------- | :--------------------------------- |
+| `EMAIL_BUILD_TRIGGER_IDS`   | [Build trigger] IDs          | `123-456, 789-123`   |                                    |
+| `EMAIL_BUILD_TRIGGER_NAMES` | Build trigger names or globs | `my-trigger, *-main` |                                    |
+| `EMAIL_BUILD_STATUSES`      | [Build statuses]             |                      | `FAILURE, INTERNAL_ERROR, TIMEOUT` |
 
 Items in the three above lists are separated by commas with optional spaces.
 
@@ -139,19 +140,18 @@ links to the corresponding build report:
 
 [Markdown]: https://www.markdownguide.org/
 
-### Customizing email notifications
+### Customization
 
 Email notifications can be customized by modifying the `BuildEmail` function and
 `textTemplate` and `htmlTemplate` constants in [email.go](./email.go). The
 [test_email](./test_email/main.go) program can be used to send example
 notifications so you can see how they're rendered by your email client.
 
-### Customizing badge images
-
-Badge images can be customized by modifying `badgeLeft` and `badgeStatuses`
-variables and the `badgeTemplate` constant in [badge.go](./badge.go). The
-[test_badge](./test_badge/main.go) program can be used to generate badges and
-save them locally so you can see what they look like.
+Badge images and HTML reports can be customized by modifying the `badgeLeft` and
+`badgeStatuses` variables and the `badgeTemplate` and `reportTemplate` constants
+in [badge.go](./badge.go). The [test_badge](./test_badge/main.go) program can be
+used to generate badges and save them locally so you can see what they look
+like.
 
 ### Seeing more information
 
@@ -199,7 +199,6 @@ want to be notified about.
 [Secret Manager]: https://cloud.google.com/secret-manager
 [IAM]: https://cloud.google.com/iam
 [Cloud Run]: https://cloud.google.com/run
-[Cloud Storage]: https://cloud.google.com/storage
 [Docker]: https://www.docker.com/
 [CEL]: https://opensource.google/projects/cel
 
