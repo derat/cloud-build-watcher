@@ -18,11 +18,36 @@ import (
 	cbpb "google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
 )
 
-// badgeTimeLayout is the layout for the build start time displayed when hovering over a badge.
-// See the time.Layout documentation at https://pkg.go.dev/time#pkg-constants.
-// TODO: This seems to not actually work except when viewing the image directly.
-// It seems like <img> elements may not receive pointer events.
-const badgeTimeLayout = "2 Jan 15:04"
+const (
+	// badgeTimeLayout is the layout for the build start time displayed when hovering over a badge.
+	// See the time.Layout documentation at https://pkg.go.dev/time#pkg-constants.
+	// TODO: This seems to not actually work except when viewing the image directly.
+	// It seems like <img> elements may not receive pointer events.
+	badgeTimeLayout = "2 Jan 15:04"
+
+	// After setting an object's CacheControl attribute to 'no-cache' or 'no-store', requests to its
+	// https://storage.googleapis.com/ endpoint get responses with Expires headers one year in the
+	// future:
+	//
+	//  Cache-Control: no-cache
+	//  Date: Thu, 16 Dec 2021 15:19:59 GMT
+	//  Expires: Fri, 16 Dec 2022 15:19:59 GMT
+	//
+	// The GitHub caching system at https://camo.githubusercontent.com/ seems to serve stale badges
+	// as a result. This is discussed in various places:
+	//
+	//  https://stackoverflow.com/questions/12868505/
+	//  https://stackoverflow.com/questions/49708712/
+	//  https://issuetracker.google.com/issues/77842189
+	//  https://github.com/github/markup/issues/224
+	//
+	// Setting a short delay instead (this is the one that Travis uses) seems to prevent this:
+	//
+	//  Cache-Control: max-age=30, s-maxage=30
+	//  Date: Thu, 16 Dec 2021 15:44:35 GMT
+	//  Expires: Thu, 16 Dec 2021 15:45:05 GMT
+	badgeCacheControl = "max-age=30, s-maxage=30"
+)
 
 // badgeInfo contains information about how a portion of a badge should be rendered.
 type badgeInfo struct {
@@ -62,7 +87,7 @@ func writeBadge(ctx context.Context, cfg *Config, build *cbpb.Build) error {
 
 	w := client.Bucket(cfg.badgeBucket).Object(name).NewWriter(ctx)
 	w.ContentType = "image/svg+xml"
-	w.CacheControl = "no-cache"
+	w.CacheControl = badgeCacheControl
 	if err := CreateBadge(w, build); err != nil {
 		return err
 	} else if err := w.Close(); err != nil {
@@ -73,7 +98,7 @@ func writeBadge(ctx context.Context, cfg *Config, build *cbpb.Build) error {
 		rname := build.BuildTriggerId + ".html"
 		w := client.Bucket(cfg.badgeBucket).Object(rname).NewWriter(ctx)
 		w.ContentType = "text/html; charset=UTF-8"
-		w.CacheControl = "no-cache"
+		w.CacheControl = badgeCacheControl
 		if err := CreateReport(w, build); err != nil {
 			return err
 		} else if err := w.Close(); err != nil {
